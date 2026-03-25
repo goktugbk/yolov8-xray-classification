@@ -1,0 +1,19 @@
+__pycache__/
+*.pyc
+
+# model weights
+*.pt
+*.pth
+
+# datasets
+data/data_classifier/
+*.zip
+
+# training outputs
+runs/
+data/runs/
+
+# env
+.env
+.venv/
+venv/
