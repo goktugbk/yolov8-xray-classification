@@ -164,6 +164,7 @@ streamlit run main.py
 Computer Engineering Student | AI Developer
 
 🔗 LinkedIn: https://www.linkedin.com/in/g%C3%B6ktu%C4%9F-berke-karata%C5%9F-88ba113b9/
+
 💻 GitHub: https://github.com/goktugbk
 
 ---
