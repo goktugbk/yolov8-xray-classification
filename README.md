@@ -26,6 +26,16 @@ A simple and user-friendly Streamlit interface allows interaction with the model
 
 ---
 
+## 🖼️ Application Preview
+
+### 🏠 Main Interface
+![Main](./screenshots/main.png)
+
+### 🔎 Prediction Result
+![Result](./screenshots/results.png)
+
+---
+
 ## 🧪 Data Processing
 
 * Image resizing for consistent input size
