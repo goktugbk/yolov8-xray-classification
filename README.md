@@ -1,163 +1,129 @@
-# 🧠 YOLOv8 X-Ray Disease Classification
+# YOLOv8 X-Ray Disease Classification
 
-A deep learning-based system for detecting lung diseases from chest X-ray images using YOLOv8 classification models, combined with a Streamlit web interface and a continuous learning pipeline.
+Nine-class lung disease classification from chest X-ray images, wrapped in a Streamlit interface
+with a feedback loop that lets the model be retrained on corrected predictions.
 
----
-
-## 🚀 Features
-
-* 🧠 YOLOv8-based multi-class classification (9 disease classes)
-* 🩺 Detection of lung diseases from chest X-ray images
-* 🌐 Interactive Streamlit web interface
-* ⚡ Real-time prediction with confidence scores
-* 📊 Confusion matrix-based evaluation
-* 🔁 Retrainable model with feedback (continuous learning)
-* 📈 High-performance classification results
+Started as an internship project and extended into my final-year capstone.
 
 ---
 
-## 🌐 Web Interface
+## What it does
 
-A simple and user-friendly Streamlit interface allows interaction with the model:
+- Classifies a chest X-ray into one of **9 classes**: abscess, atelectasis, pleural effusion,
+  emphysema, normal, pericarditis, pneumonia, pneumothorax, tuberculosis
+- Returns a prediction with a confidence score through a Streamlit web interface
+- Collects predictions the user marks as wrong, so the model can be retrained on them
+- Ships the evaluation it was measured with, not just a claim
 
-* Upload X-ray images
-* Get instant predictions
-* View confidence scores
+## Interface
 
----
+![Main interface](./screenshots/main.png)
 
-## 🧪 Data Processing
+![Prediction result](./screenshots/results.png)
 
-* Image resizing for consistent input size
-* Basic data cleaning and preprocessing
-* Dataset preparation for classification tasks
+Upload an X-ray, get a class and a confidence score, and flag the result if it looks wrong.
 
----
+## Model
 
-## 🛠️ Tech Stack
+| | |
+|---|---|
+| Architecture | `yolov8l-cls` (Ultralytics classification head) |
+| Initialisation | ImageNet-pretrained |
+| Epochs | 25 |
+| Image size | 224 × 224 |
+| Batch size | 16 |
 
-* Python
-* YOLOv8 (Ultralytics)
-* OpenCV
-* NumPy
-* Streamlit
+## Dataset
 
----
+[X-ray lung diseases, 9 classes](https://www.kaggle.com/datasets/fernando2rad/x-ray-lung-diseases-images-9-classes)
+on Kaggle — pre-labelled, used for educational purposes. The dataset belongs to its original
+authors and is **not** redistributed in this repository.
 
-## 📊 Model Performance
+| Split | Images | Used for |
+|---|---|---|
+| train | 5,431 | Training |
+| val | 670 | Monitoring during training, model selection |
+| test | 681 | Final evaluation only |
+| **Total** | **6,782** | |
 
-The model was trained and evaluated on a multi-class chest X-ray dataset.
+The three splits share no files. The dataset carries no patient identifiers, so a patient-level
+split was not possible — worth knowing when reading the numbers below.
 
-### 📈 Metrics Summary
+## Results
 
-| Metric    | Value    |
-| --------- | -------- |
-| Accuracy  | ~98-100% |
-| Precision | ~98%     |
-| Recall    | ~98%     |
-| F1 Score  | ~98%     |
+Measured with Ultralytics on `yolov8l-cls`:
 
----
+| Split | Images | Top-1 | Top-5 |
+|---|---|---|---|
+| **test** — held out, never used for model selection | 681 | **98.97%** | 100% |
+| val | 670 | 98.66% | 99.85% |
 
-## 🔍 Confusion Matrix
+The test and validation scores agree closely, which is the main reason to trust them: a model that
+had memorised its training data would score far better on the split it was tuned against than on
+one it never influenced.
 
-### Raw Confusion Matrix
+### Confusion matrix
 
 ![Confusion Matrix](./screenshots/confusion_matrix.png)
 
-### Normalized Confusion Matrix
-
 ![Normalized Confusion Matrix](./screenshots/confusion_matrix_normalized.png)
 
----
+Almost all classes separate cleanly. The only recurring confusion is **pneumonia ↔ normal**, which
+is also the pair where a mistake costs most — a missed pneumonia reads as a healthy lung.
 
-### 📊 Observations
+## Feedback loop
 
-* Most classes are classified with near-perfect accuracy
-* Very low misclassification between disease categories
-* Minor confusion observed between:
+Predictions the user flags as wrong are stored with their corrected label. Those samples can then
+be folded back into training, so the model improves on exactly the cases it got wrong rather than
+on more of what it already handles.
 
-  * **Normal ↔ Pneumonia**
+This is the part that was added after the internship, for the capstone version.
 
-The model demonstrates strong generalization and reliability.
-
----
-
-## 🔁 Continuous Learning (Feedback System)
-
-This project includes a feedback mechanism that allows improving the model over time.
-
-* Users can review incorrect predictions
-* Misclassified samples can be collected
-* The model can be retrained with new corrected data
-
-This enables a **self-improving system** that evolves with new inputs.
-
----
-
-## 📂 Dataset
-
-This project uses a publicly available dataset from Kaggle:
-
-🔗 https://www.kaggle.com/datasets/fernando2rad/x-ray-lung-diseases-images-9-classes?select=00+Anatomia+Normal
-
-> Note: Dataset belongs to the original authors and is used for educational purposes.
-
----
-
-## ⚙️ Installation
+## Install
 
 ```bash
 git clone https://github.com/goktugbk/yolov8-xray-classification.git
 cd yolov8-xray-classification
 
+python -m venv .venv
+.venv\Scripts\activate      # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
+
 streamlit run main.py
 ```
 
----
+Trained weights are not committed here. Point `models/best.pt` at your own checkpoint, or train
+one from the dataset above:
 
-## 🧪 Usage
-
-1. Upload a chest X-ray image
-2. Model predicts the disease class
-3. View prediction confidence
-4. Provide feedback (optional)
-
----
-
-## 📁 Project Structure
-
-```
-.
-├── main.py
-├── train_update.py
-├── helper.py
-├── feedback_utils.py
-├── data/
-├── models/
-├── screenshots/
-└── README.md
+```bash
+yolo classify train model=yolov8l-cls.pt data=data/dataset_classification epochs=25 imgsz=224
 ```
 
----
+Expected layout, with the dataset in Ultralytics classification format:
 
-## 📌 Project Status
+```
+data/dataset_classification/{train,val,test}/<class_name>/*.jpg
+models/best.pt
+```
 
-🚧 This project is under active development and improvement.
+## Files
 
----
+| File | Role |
+|---|---|
+| `main.py` | Streamlit app: upload, predict, collect feedback |
+| `helper.py` | Model loading and prediction helpers |
+| `feedback_utils.py` | Storing and reading flagged predictions |
+| `train_update.py` | Retraining on collected feedback |
 
-## 👨‍💻 Author
+## Limitations
 
-**Göktuğ Berke Karataş**
-Computer Engineering Student | AI Developer
+This is a student project, not a medical device. It was trained on one public dataset and
+evaluated on one held-out split from that same dataset. It has never been tested against images
+from a different hospital, scanner or population — which is where classifiers like this usually
+lose most of their accuracy. It is not a diagnostic tool and must not be used as one.
 
-🔗 LinkedIn: https://www.linkedin.com/in/g%C3%B6ktu%C4%9F-berke-karata%C5%9F-88ba113b9/
-💻 GitHub: https://github.com/goktugbk
+## Author
 
----
+**Göktuğ Berke Karataş** — computer engineering, graduating October 2026
 
-## ⭐ Support
-
-If you like this project, give it a ⭐ on GitHub!
+[GitHub](https://github.com/goktugbk) · [LinkedIn](https://www.linkedin.com/in/goktug-berke-karatas/)
